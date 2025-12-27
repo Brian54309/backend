@@ -16,7 +16,7 @@ RUN apt-get update -qq && \
     build-essential node-gyp pkg-config python-is-python3
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install --omit=dev
 
 COPY . .
 
