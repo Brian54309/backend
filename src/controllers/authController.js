@@ -7,10 +7,26 @@ import { generateToken } from "../utils/token.js";
 ====================== */
 export const register = async (req, res) => {
   try {
-    const { name, email, password, is_admin } = req.body;
+    const {
+      name,
+      email,
+      password,
+      phone_number,
+      address,
+      latitude,
+      longitude
+    } = req.body;
 
+    // Required fields
     if (!name || !email || !password) {
-      return res.status(400).json({ error: "Missing fields" });
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // If address is provided, lat & lng must exist
+    if ((address && (!latitude || !longitude))) {
+      return res.status(400).json({
+        error: "Address must include latitude and longitude"
+      });
     }
 
     // Check existing user
@@ -27,13 +43,30 @@ export const register = async (req, res) => {
 
     await db.query(
       `
-      INSERT INTO users (name, email, password_hash, is_admin)
-      VALUES ($1, $2, $3, $4)
+      INSERT INTO users (
+        name,
+        email,
+        password_hash,
+        phone_number,
+        address,
+        latitude,
+        longitude,
+        is_admin
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, false)
       `,
-      [name, email, hashedPassword, is_admin ?? false]
+      [
+        name,
+        email,
+        hashedPassword,
+        phone_number || null,
+        address || null,
+        latitude || null,
+        longitude || null
+      ]
     );
 
-    res.json({ message: "User registered" });
+    res.status(201).json({ message: "User registered" });
   } catch (err) {
     console.error("REGISTER ERROR:", err);
     res.status(500).json({ error: "Server error" });
