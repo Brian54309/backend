@@ -4,6 +4,7 @@ import { isAdmin } from "../middleware/isAdmin.js";
 import upload from "../middleware/upload.js";
 import {
     getAllProducts,
+    getProductById,
     addProduct,
     updateProduct,
     deleteProduct,
@@ -12,6 +13,8 @@ import {
 const router = express.Router();
 
 router.get("/all", getAllProducts);
+
+router.get("/:id", getProductById);
 
 router.post(
   "/add",
