@@ -66,29 +66,49 @@ export const updateProduct = async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    // 2. Use new image if uploaded, otherwise keep old
-    const imageUrl = req.file
-      ? req.file.path
-      : existing.rows[0].image_url;
+    const fields = [];
+    const values = [];
 
-    // 3. Update product
-    const result = await db.query(
+    // 2. Conditionally add fields
+    if (name !== undefined) {
+      fields.push(`name = $${values.length + 1}`);
+      values.push(name);
+    }
+
+    if (price !== undefined) {
+      fields.push(`price = $${values.length + 1}`);
+      values.push(price);
+    }
+
+    if (description !== undefined) {
+      fields.push(`description = $${values.length + 1}`);
+      values.push(description);
+    }
+
+    if (stock !== undefined) {
+      fields.push(`stock = $${values.length + 1}`);
+      values.push(stock);
+    }
+
+    // 3. Handle image (Cloudinary)
+    if (req.file) {
+      fields.push(`image_url = $${values.length + 1}`);
+      values.push(req.file.path);
+    }
+
+    if (fields.length === 0) {
+      return res.status(400).json({ error: "Nothing to update" });
+    }
+
+    // 4. Execute update
+    await db.query(
       `
       UPDATE products
-      SET name = $1,
-          price = $2,
-          description = $3,
-          stock = $4,
-          image_url = $5
-      WHERE id = $6
-      RETURNING id
+      SET ${fields.join(", ")}
+      WHERE id = $${values.length + 1}
       `,
-      [name, price, description, stock, imageUrl, id]
+      [...values, id]
     );
-
-    if (result.rowCount === 0) {
-      return res.status(400).json({ error: "Nothing updated" });
-    }
 
     res.json({ message: "Product updated successfully" });
   } catch (err) {
@@ -96,6 +116,7 @@ export const updateProduct = async (req, res) => {
     res.status(500).json({ error: "Failed to update product" });
   }
 };
+
 
 /* ======================
    DELETE PRODUCT

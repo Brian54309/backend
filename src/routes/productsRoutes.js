@@ -21,7 +21,7 @@ router.post(
   addProduct
 );
 
-router.put(
+router.patch(
   "/edit/:id",
   authMiddleware,
   isAdmin,
